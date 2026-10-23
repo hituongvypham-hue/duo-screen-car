@@ -470,6 +470,7 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
      [o,s]=(0,_.useState)([]),
      [c,l]=(0,_.useState)(!1),
      [u,d]=(0,_.useState)(!1),
+     [autoSug,setAutoSug]=(0,_.useState)(!0),
      f=(0,_.useRef)(null),
      [p,m]=(0,_.useState)(null),
      [h,g]=(0,_.useState)(()=>dr());
@@ -486,25 +487,25 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
 
   let q=curField===`origin`?origIn:n;
   (0,_.useEffect)(()=>{
-    if(!q.trim()||q.trim().length<2){s([]),d(!1);return}
-    let e=setTimeout(async()=>{
+    if(!autoSug||!q.trim()||q.trim().length<2){s([]),d(!1);return}
+    let timer=setTimeout(async()=>{
       l(!0);
       try{
-        let e=await(await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q.trim())}&limit=6`)).json();
-        if(e.features&&e.features.length>0){
-          let t=e.features.map(e=>{
-            let t=e.properties,
-                n=t.name||t.street||`Địa điểm`,
-                r=[t.district,t.city,t.state,t.country].filter(Boolean).join(`, `);
-            return{name:n,detail:r,fullAddress:r?`${n}, ${r}`:n};
+        let res=await(await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q.trim())}&limit=5`)).json();
+        if(res.features&&res.features.length>0){
+          let list=res.features.map(f=>{
+            let p=f.properties,
+                name=p.name||p.street||`Địa điểm`,
+                detail=[p.district,p.city,p.state,p.country].filter(Boolean).join(`, `);
+            return{name,detail,fullAddress:detail?`${name}, ${detail}`:name};
           });
-          s(t),d(!0);
+          s(list),d(!0);
         }else s([]);
-      }catch(e){console.error(`Lỗi gợi ý tìm kiếm địa điểm:`,e)}
+      }catch(err){console.error(`Lỗi gợi ý:`,err)}
       finally{l(!1)}
-    },300);
-    return()=>clearTimeout(e);
-  },[q,curField]);
+    },350);
+    return()=>clearTimeout(timer);
+  },[q,curField,autoSug]);
 
   (0,_.useEffect)(()=>{
     let e=e=>{f.current&&!f.current.contains(e.target)&&d(!1)};
@@ -521,10 +522,11 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
   };
 
   let y=ev=>{
-    ev.preventDefault();
+    ev&&ev.preventDefault();
     if(curField===`origin`&&origIn.trim()){
       setOrig(origIn.trim());
-    }else if(n.trim()){
+    }
+    if(n.trim()){
       t(n.trim());
     }
     d(!1),a(!0);
@@ -543,11 +545,13 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
     setOrigIn(curDIn||curD);
     t(curO===`Vị trí hiện tại`?`Hà Nội`:curO);
     r(curOIn||(curO===`Vị trí hiện tại`?`Hà Nội`:curO));
+    d(!1);
   };
 
   let resetGPS=()=>{
     setOrig(`My Location`);
     setOrigIn(``);
+    d(!1);
   };
 
   let realOrigin=orig&&orig.trim()&&orig!==`My Location`?orig.trim():`My Location`;
@@ -560,67 +564,68 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
     :`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(realDest)}`;
 
   return(0,N.jsxs)(`div`,{className:`relative w-full h-full flex flex-col bg-neutral-900/90 text-white rounded-2xl overflow-hidden shadow-2xl border border-neutral-800`,children:[
-    (0,N.jsxs)(`div`,{className:`px-2.5 sm:px-3.5 py-2 bg-neutral-900/95 flex flex-col justify-center border-b border-neutral-800 shrink-0 gap-2 z-30 transition-all`,children:[
+    (0,N.jsxs)(`div`,{ref:f,className:`relative px-2.5 sm:px-3.5 py-2 bg-neutral-900/95 flex flex-col justify-center border-b border-neutral-800 shrink-0 gap-2 z-30 transition-all`,children:[
       (0,N.jsxs)(`div`,{className:`flex items-center justify-between gap-1.5 sm:gap-2`,children:[
-        (0,N.jsxs)(`div`,{className:`flex items-center gap-2 shrink-0`,children:[
+        (0,N.jsxs)(`div`,{className:`flex items-center gap-1.5 sm:gap-2 shrink-0`,children:[
           (0,N.jsx)(`div`,{className:`w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/30 shrink-0`,children:(0,N.jsx)(ct,{className:`w-4 h-4 sm:w-5 sm:h-5 fill-white text-white rotate-45`})}),
           (0,N.jsx)(`span`,{className:`font-extrabold text-xs sm:text-base text-white hidden md:inline`,children:`Google Maps`}),
-          (0,N.jsxs)(`button`,{type:`button`,onClick:()=>setIsTwo(!isTwo),className:`px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 border active:scale-95 ${isTwo?`bg-emerald-600 text-white border-emerald-500 shadow-md`:`bg-neutral-800 hover:bg-neutral-700 text-emerald-400 border-neutral-700`}`,title:`Chuyển đổi giữa chế độ tìm 1 điểm hoặc lộ trình 2 điểm (Điểm đi ➔ Điểm đến)`,children:[
+          (0,N.jsxs)(`button`,{type:`button`,onClick:()=>{setIsTwo(!isTwo);d(!1)},className:`px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border active:scale-95 ${isTwo?`bg-emerald-600 text-white border-emerald-500 shadow-md`:`bg-neutral-800 hover:bg-neutral-700 text-emerald-400 border-neutral-700`}`,title:`Chuyển đổi giữa tìm 1 điểm hoặc lộ trình 2 điểm (Điểm đi ➔ Điểm đến)`,children:[
             (0,N.jsx)(`span`,{className:`text-xs leading-none`,children:`⇄`}),
             (0,N.jsx)(`span`,{children:isTwo?`1 Điểm`:`Lộ trình 2 điểm`})
           ]})
         ]}),
-        !isTwo&&(0,N.jsxs)(`div`,{ref:f,className:`relative flex-1 max-w-md`,children:[
-          (0,N.jsxs)(`form`,{onSubmit:y,className:`flex items-center gap-1.5 sm:gap-2`,children:[
-            (0,N.jsxs)(`div`,{className:`relative w-full`,children:[
-              (0,N.jsx)(`input`,{type:`text`,placeholder:`Tìm điểm đến, quán ăn, sân bay, toà nhà...`,value:n,onFocus:()=>{setCurField(`dest`);o.length>0&&d(!0)},onChange:e=>r(e.target.value),className:`w-full bg-neutral-800/90 hover:bg-neutral-800 focus:bg-neutral-950 text-xs sm:text-sm text-white placeholder-neutral-400 pl-8 pr-7 py-1.5 sm:py-2 rounded-xl border border-neutral-700 focus:border-emerald-500 focus:outline-none transition-all`}),
-              (0,N.jsx)(Ot,{className:`w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none`}),
-              n&&(0,N.jsx)(`button`,{type:`button`,onClick:()=>{r(``),s([]),d(!1)},className:`absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white`,children:(0,N.jsx)(cn,{className:`w-3.5 h-3.5`})})
-            ]}),
-            (0,N.jsx)(`button`,{type:`submit`,className:`px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm font-bold rounded-xl shrink-0 transition active:scale-95 shadow-md shadow-emerald-600/20`,children:`Tìm`})
+        !isTwo&&(0,N.jsxs)(`form`,{onSubmit:y,className:`relative flex-1 max-w-md flex items-center gap-1.5 sm:gap-2`,children:[
+          (0,N.jsxs)(`div`,{className:`relative w-full`,children:[
+            (0,N.jsx)(`input`,{type:`text`,placeholder:`Tìm điểm đến, quán ăn, sân bay, toà nhà...`,value:n,onFocus:()=>{setCurField(`dest`);o.length>0&&autoSug&&d(!0)},onChange:e=>r(e.target.value),className:`w-full bg-neutral-800/90 hover:bg-neutral-800 focus:bg-neutral-950 text-xs sm:text-sm text-white placeholder-neutral-400 pl-8 pr-7 py-1.5 sm:py-2 rounded-xl border border-neutral-700 focus:border-emerald-500 focus:outline-none transition-all`}),
+            (0,N.jsx)(Ot,{className:`w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none`}),
+            n&&(0,N.jsx)(`button`,{type:`button`,onClick:()=>{r(``),s([]),d(!1)},className:`absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white`,children:(0,N.jsx)(cn,{className:`w-3.5 h-3.5`})})
           ]}),
-          u&&curField===`dest`&&(0,N.jsx)(`div`,{className:`absolute top-11 left-0 right-12 bg-neutral-900/98 backdrop-blur-xl rounded-2xl shadow-2xl border border-neutral-700/80 overflow-hidden z-50 divide-y divide-neutral-800`,children:
-            c?(0,N.jsxs)(`div`,{className:`p-3 text-xs text-neutral-400 flex items-center justify-center gap-2`,children:[(0,N.jsx)(Xe,{className:`w-4 h-4 animate-spin text-emerald-500`}),(0,N.jsx)(`span`,{children:`Đang tìm địa điểm...`})]}):
-            o.length>0?o.map((e,t)=>(0,N.jsxs)(`button`,{type:`button`,key:t,onClick:()=>v(e),className:`w-full text-left p-2.5 hover:bg-emerald-600/20 hover:border-l-4 hover:border-emerald-500 transition-all flex items-start gap-2.5 group`,children:[
-              (0,N.jsx)(`div`,{className:`w-6 h-6 rounded-lg bg-neutral-800 group-hover:bg-emerald-600/30 flex items-center justify-center shrink-0 mt-0.5`,children:(0,N.jsx)(Qe,{className:`w-3.5 h-3.5 text-emerald-400`})}),
-              (0,N.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[
-                (0,N.jsx)(`div`,{className:`text-xs font-semibold text-neutral-100 group-hover:text-emerald-300 truncate`,children:e.name}),
-                e.detail&&(0,N.jsx)(`div`,{className:`text-[10px] text-neutral-400 truncate mt-0.5`,children:e.detail})
-              ]})
-            ]})):null
-          })
+          (0,N.jsx)(`button`,{type:`submit`,className:`px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm font-bold rounded-xl shrink-0 transition active:scale-95 shadow-md shadow-emerald-600/20`,children:`Tìm`})
         ]}),
-        (0,N.jsxs)(`div`,{className:`flex items-center bg-neutral-800 rounded-xl p-0.5 border border-neutral-700 text-xs shrink-0`,children:[
-          (0,N.jsx)(`button`,{onClick:()=>a(!0),className:`px-2.5 py-1 rounded-lg transition font-bold ${i?`bg-emerald-600 text-white shadow`:`text-neutral-400 hover:text-white`}`,children:`Dẫn đường`}),
-          (0,N.jsx)(`button`,{onClick:()=>a(!1),className:`px-2.5 py-1 rounded-lg transition font-bold ${i?`text-neutral-400 hover:text-white`:`bg-emerald-600 text-white shadow`}`,children:`Vị trí`})
+        (0,N.jsxs)(`div`,{className:`flex items-center gap-1.5 shrink-0`,children:[
+          (0,N.jsxs)(`div`,{className:`flex items-center bg-neutral-800 rounded-xl p-0.5 border border-neutral-700 text-xs`,children:[
+            (0,N.jsx)(`button`,{onClick:()=>a(!0),className:`px-2.5 py-1 rounded-lg transition font-bold ${i?`bg-emerald-600 text-white shadow`:`text-neutral-400 hover:text-white`}`,children:`Dẫn đường`}),
+            (0,N.jsx)(`button`,{onClick:()=>a(!1),className:`px-2.5 py-1 rounded-lg transition font-bold ${i?`text-neutral-400 hover:text-white`:`bg-emerald-600 text-white shadow`}`,children:`Vị trí`})
+          ]})
         ]})
       ]}),
-      isTwo&&(0,N.jsxs)(`form`,{ref:f,onSubmit:y,className:`relative flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 p-2 bg-neutral-950/80 rounded-xl border border-neutral-800 animate-fadeIn`,children:[
-        (0,N.jsxs)(`div`,{className:`relative flex-1 flex items-center gap-1`,children:[
-          (0,N.jsx)(`span`,{className:`w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 ml-1.5`}),
-          (0,N.jsx)(`input`,{type:`text`,placeholder:orig===`My Location`?`📍 Vị trí GPS của tôi (hoặc gõ...)`:`Điểm xuất phát...`,value:origIn,onFocus:()=>{setCurField(`origin`);o.length>0&&d(!0)},onChange:e=>setOrigIn(e.target.value),className:`w-full bg-neutral-800/90 hover:bg-neutral-800 focus:bg-neutral-900 text-xs text-white placeholder:text-neutral-400 pl-2 pr-14 py-1.5 rounded-lg border border-neutral-700 focus:border-emerald-500 focus:outline-none transition`}),
-          (0,N.jsx)(`button`,{type:`button`,onClick:resetGPS,className:`absolute right-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white transition`,title:`Quay lại GPS vị trí hiện tại`,children:`📍 GPS`})
+      isTwo&&(0,N.jsxs)(`form`,{onSubmit:y,className:`flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 p-2 bg-neutral-950/90 rounded-2xl border border-neutral-800 animate-fadeIn relative z-20`,children:[
+        (0,N.jsxs)(`div`,{className:`relative flex-1 flex items-center bg-neutral-900/90 rounded-xl border border-neutral-700/80 focus-within:border-emerald-500 transition px-2.5 py-1`,children:[
+          (0,N.jsx)(`span`,{className:`w-2 h-2 rounded-full bg-emerald-400 shrink-0 mr-1.5 animate-pulse`}),
+          (0,N.jsx)(`input`,{type:`text`,placeholder:orig===`My Location`?`📍 Vị trí GPS của tôi (hoặc gõ địa điểm)...`:`Điểm xuất phát...`,value:origIn,onFocus:()=>{setCurField(`origin`);o.length>0&&autoSug&&d(!0)},onChange:e=>setOrigIn(e.target.value),className:`flex-1 bg-transparent text-xs text-white placeholder:text-neutral-400 focus:outline-none min-w-0 pr-1`}),
+          (0,N.jsx)(`button`,{type:`button`,onClick:resetGPS,className:`text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white transition shrink-0 ml-1`,title:`Đặt lại về GPS vị trí xe hiện tại`,children:`📍 GPS`})
         ]}),
-        (0,N.jsx)(`button`,{type:`button`,onClick:swapPoints,className:`w-7 h-7 self-center sm:self-auto rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white flex items-center justify-center transition active:scale-95 border border-neutral-700 shrink-0`,title:`Đổi chỗ Điểm đi và Điểm đến`,children:`⇅`}),
-        (0,N.jsxs)(`div`,{className:`relative flex-1 flex items-center gap-1`,children:[
-          (0,N.jsx)(`span`,{className:`w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0 ml-1.5`}),
-          (0,N.jsx)(`input`,{type:`text`,placeholder:`Nhập điểm đến...`,value:n,onFocus:()=>{setCurField(`dest`);o.length>0&&d(!0)},onChange:e=>r(e.target.value),className:`w-full bg-neutral-800/90 hover:bg-neutral-800 focus:bg-neutral-900 text-xs text-white placeholder:text-neutral-400 pl-2 pr-6 py-1.5 rounded-lg border border-neutral-700 focus:border-emerald-500 focus:outline-none transition`}),
-          n&&(0,N.jsx)(`button`,{type:`button`,onClick:()=>{r(``),s([]),d(!1)},className:`absolute right-2 text-neutral-400 hover:text-white`,children:`✕`})
+        (0,N.jsx)(`button`,{type:`button`,onClick:swapPoints,className:`w-8 h-8 self-center sm:self-auto rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white flex items-center justify-center transition active:scale-95 border border-neutral-700 shrink-0 shadow-sm`,title:`Đổi chỗ Điểm đi và Điểm đến`,children:`⇅`}),
+        (0,N.jsxs)(`div`,{className:`relative flex-1 flex items-center bg-neutral-900/90 rounded-xl border border-neutral-700/80 focus-within:border-emerald-500 transition px-2.5 py-1`,children:[
+          (0,N.jsx)(`span`,{className:`w-2 h-2 rounded-full bg-rose-500 shrink-0 mr-1.5`}),
+          (0,N.jsx)(`input`,{type:`text`,placeholder:`Nhập điểm đến (trường học, quán ăn, toà nhà...)`,value:n,onFocus:()=>{setCurField(`dest`);o.length>0&&autoSug&&d(!0)},onChange:e=>r(e.target.value),className:`flex-1 bg-transparent text-xs text-white placeholder:text-neutral-400 focus:outline-none min-w-0 pr-1`}),
+          n&&(0,N.jsx)(`button`,{type:`button`,onClick:()=>{r(``),s([]),d(!1)},className:`text-neutral-400 hover:text-white text-xs p-1`,children:`✕`})
         ]}),
-        (0,N.jsxs)(`div`,{className:`flex items-center gap-1 shrink-0`,children:[
-          (0,N.jsx)(`button`,{type:`submit`,className:`flex-1 sm:flex-none px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition active:scale-95 shadow-md shadow-emerald-600/20`,children:`Tìm đường`}),
-          (0,N.jsx)(`button`,{type:`button`,onClick:()=>setIsTwo(!1),className:`p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition`,title:`Đóng lộ trình 2 điểm`,children:`✕`})
+        (0,N.jsxs)(`div`,{className:`flex items-center gap-1.5 shrink-0`,children:[
+          (0,N.jsx)(`button`,{type:`submit`,className:`flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition active:scale-95 shadow-md shadow-emerald-600/25 flex items-center justify-center gap-1`,children:[(0,N.jsx)(Ot,{className:`w-3.5 h-3.5`}),`Tìm đường`]}),
+          (0,N.jsx)(`button`,{type:`button`,onClick:()=>{setIsTwo(!1);d(!1)},className:`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition text-xs border border-neutral-800`,title:`Thu gọn về 1 ô`,children:`✕`})
+        ]})
+      ]}),
+      u&&q.trim().length>=2&&(0,N.jsxs)(`div`,{className:`absolute top-full mt-1.5 left-2 sm:left-4 right-2 sm:right-4 bg-neutral-950/98 backdrop-blur-2xl rounded-2xl shadow-2xl border border-neutral-700/90 overflow-hidden z-50 animate-fadeIn divide-y divide-neutral-800 max-h-60 overflow-y-auto`,children:[
+        (0,N.jsxs)(`button`,{type:`button`,onClick:y,className:`w-full text-left px-3.5 py-2.5 bg-emerald-600/20 hover:bg-emerald-600/35 text-emerald-300 font-bold text-xs flex items-center justify-between transition group`,children:[
+          (0,N.jsxs)(`div`,{className:`flex items-center gap-2 truncate min-w-0 flex-1`,children:[
+            (0,N.jsx)(Ot,{className:`w-4 h-4 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform`}),
+            (0,N.jsxs)(`span`,{className:`truncate text-white`,children:[`Tìm chính xác trên Google Maps: "`,(0,N.jsx)(`span`,{className:`text-emerald-400 font-extrabold`,children:q}),`"`]})
+          ]}),
+          (0,N.jsx)(`span`,{className:`text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white shrink-0 font-extrabold shadow-sm ml-2`,children:`Tìm bằng Google`})
         ]}),
-        u&&(0,N.jsx)(`div`,{className:`absolute top-full mt-1 left-0 right-0 bg-neutral-900/98 backdrop-blur-xl rounded-2xl shadow-2xl border border-neutral-700/80 overflow-hidden z-50 divide-y divide-neutral-800`,children:
-          c?(0,N.jsxs)(`div`,{className:`p-3 text-xs text-neutral-400 flex items-center justify-center gap-2`,children:[(0,N.jsx)(Xe,{className:`w-4 h-4 animate-spin text-emerald-500`}),(0,N.jsx)(`span`,{children:`Đang tìm địa điểm...`})]}):
-          o.length>0?o.map((e,t)=>(0,N.jsxs)(`button`,{type:`button`,key:t,onClick:()=>v(e),className:`w-full text-left p-2.5 hover:bg-emerald-600/20 hover:border-l-4 hover:border-emerald-500 transition-all flex items-start gap-2.5 group`,children:[
-            (0,N.jsx)(`div`,{className:`w-6 h-6 rounded-lg bg-neutral-800 group-hover:bg-emerald-600/30 flex items-center justify-center shrink-0 mt-0.5`,children:(0,N.jsx)(Qe,{className:`w-3.5 h-3.5 text-emerald-400`})}),
-            (0,N.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[
-              (0,N.jsx)(`div`,{className:`text-xs font-semibold text-neutral-100 group-hover:text-emerald-300 truncate`,children:e.name}),
-              e.detail&&(0,N.jsx)(`div`,{className:`text-[10px] text-neutral-400 truncate mt-0.5`,children:e.detail})
-            ]})
-          ]})):null
-        })
+        c&&(0,N.jsxs)(`div`,{className:`p-3 text-xs text-neutral-400 flex items-center justify-center gap-2`,children:[(0,N.jsx)(Xe,{className:`w-4 h-4 animate-spin text-emerald-500`}),(0,N.jsx)(`span`,{children:`Đang tìm thêm địa điểm gợi ý...`})]}),
+        !c&&o.length>0&&o.map((item,idx)=>(0,N.jsxs)(`button`,{type:`button`,key:idx,onClick:()=>v(item),className:`w-full text-left px-3 py-2 hover:bg-neutral-800/90 transition-all flex items-start gap-2.5 group`,children:[
+          (0,N.jsx)(`div`,{className:`w-6 h-6 rounded-lg bg-neutral-900 group-hover:bg-emerald-600/30 flex items-center justify-center shrink-0 mt-0.5 border border-neutral-800`,children:(0,N.jsx)(Qe,{className:`w-3.5 h-3.5 text-emerald-400`})}),
+          (0,N.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[
+            (0,N.jsx)(`div`,{className:`text-xs font-semibold text-neutral-100 group-hover:text-emerald-300 truncate`,children:item.name}),
+            item.detail&&(0,N.jsx)(`div`,{className:`text-[10px] text-neutral-400 truncate mt-0.5`,children:item.detail})
+          ]})
+        ]})),
+        (0,N.jsxs)(`div`,{className:`px-3 py-1.5 bg-neutral-950 flex items-center justify-between text-[10px] text-neutral-500`,children:[
+          (0,N.jsx)(`span`,{children:`Nhấn Enter hoặc nút [Tìm] để Google Maps định vị chuẩn 100%`}),
+          (0,N.jsx)(`button`,{type:`button`,onClick:()=>d(!1),className:`text-neutral-400 hover:text-white px-2 py-0.5 rounded bg-neutral-900`,children:`✕ Đóng gợi ý`})
+        ]})
       ]})
     ]}),
     (0,N.jsxs)(`div`,{className:`h-8 px-3 bg-neutral-950/60 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-neutral-800/60 text-[11px] shrink-0 z-10`,children:[
