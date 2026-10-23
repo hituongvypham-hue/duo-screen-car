@@ -470,19 +470,37 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
      [o,s]=(0,_.useState)([]),
      [c,l]=(0,_.useState)(!1),
      [u,d]=(0,_.useState)(!1),
+     [gpsCoords,setGpsCoords]=(0,_.useState)(null),
+     [gpsStatus,setGpsStatus]=(0,_.useState)(`pending`),
      [autoSug,setAutoSug]=(0,_.useState)(!0),
      f=(0,_.useRef)(null),
      [p,m]=(0,_.useState)(null),
      [h,g]=(0,_.useState)(()=>dr());
 
   (0,_.useEffect)(()=>{
-    let e=null;
-    return navigator.geolocation&&(e=navigator.geolocation.watchPosition(e=>{
-      let t=e.coords.latitude,
-          n=e.coords.longitude,
-          r=br(t,n,e.coords.heading!==null&&!isNaN(e.coords.heading)?Math.round(e.coords.heading):null);
-      m(r),r.upcomingSign&&Fr(r.upcomingSign);
-    },()=>{},{enableHighAccuracy:!0,maximumAge:2e3})),()=>{e!==null&&navigator.geolocation.clearWatch(e)};
+    let watchId=null;
+    if(navigator.geolocation){
+      let onPos=pos=>{
+        let lat=pos.coords.latitude,
+            lng=pos.coords.longitude;
+        setGpsCoords({lat,lng});
+        setGpsStatus(`ready`);
+        let heading=pos.coords.heading!==null&&!isNaN(pos.coords.heading)?Math.round(pos.coords.heading):null;
+        let sign=br(lat,lng,heading);
+        m(sign);
+        sign.upcomingSign&&Fr(sign.upcomingSign);
+      };
+      let onErr=err=>{
+        console.warn(`GPS error:`,err.code,err.message);
+        if(err.code===1)setGpsStatus(`denied`);
+        else setGpsStatus(`error`);
+      };
+      navigator.geolocation.getCurrentPosition(onPos,onErr,{enableHighAccuracy:!0,timeout:8000,maximumAge:0});
+      watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:!0,maximumAge:2e3});
+    }else{
+      setGpsStatus(`unsupported`);
+    }
+    return()=>{watchId!==null&&navigator.geolocation.clearWatch(watchId)};
   },[]);
 
   let q=curField===`origin`?origIn:n;
@@ -537,7 +555,7 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
   };
 
   let swapPoints=()=>{
-    let curO=orig===`My Location`?(origIn||`Vị trí hiện tại`):orig;
+    let curO=orig===`My Location`?(origIn||(gpsCoords?`${gpsCoords.lat.toFixed(4)},${gpsCoords.lng.toFixed(4)}`:`Vị trí hiện tại`)):orig;
     let curD=e;
     let curOIn=origIn;
     let curDIn=n;
@@ -552,13 +570,33 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
     setOrig(`My Location`);
     setOrigIn(``);
     d(!1);
+    if(navigator.geolocation){
+      setGpsStatus(`pending`);
+      navigator.geolocation.getCurrentPosition(pos=>{
+        let lat=pos.coords.latitude,lng=pos.coords.longitude;
+        setGpsCoords({lat,lng});
+        setGpsStatus(`ready`);
+      },err=>{
+        if(err.code===1){
+          setGpsStatus(`denied`);
+          alert(`Trình duyệt chưa được cấp quyền Vị trí (GPS). Vui lòng nhấn vào biểu tượng ổ khóa hoặc cài đặt trên thanh địa chỉ trình duyệt và chọn Cho phép Vị trí để lấy toạ độ chính xác nhất.`);
+        }
+      },{enableHighAccuracy:!0,timeout:10000,maximumAge:0});
+    }
   };
 
-  let realOrigin=orig&&orig.trim()&&orig!==`My Location`?orig.trim():`My Location`;
+  let realOrigin=(orig&&orig.trim()&&orig!==`My Location`)
+    ?orig.trim()
+    :(gpsCoords?`${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}`:`My Location`);
+
   let realDest=e&&e.trim()?e.trim():`Hà Nội, Việt Nam`;
+
   let mapSrc=i
     ?`https://www.google.com/maps?saddr=${encodeURIComponent(realOrigin)}&daddr=${encodeURIComponent(realDest)}&output=embed`
-    :`https://maps.google.com/maps?q=${encodeURIComponent(realDest)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+    :(gpsCoords&&!n.trim()
+      ?`https://maps.google.com/maps?q=${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}&t=&z=16&ie=UTF8&iwloc=&output=embed`
+      :`https://maps.google.com/maps?q=${encodeURIComponent(realDest)}&t=&z=14&ie=UTF8&iwloc=&output=embed`);
+
   let appUrl=i
     ?`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(realOrigin===`My Location`?``:realOrigin)}&destination=${encodeURIComponent(realDest)}`
     :`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(realDest)}`;
@@ -572,11 +610,15 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
           (0,N.jsxs)(`button`,{type:`button`,onClick:()=>{setIsTwo(!isTwo);d(!1)},className:`px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border active:scale-95 ${isTwo?`bg-emerald-600 text-white border-emerald-500 shadow-md`:`bg-neutral-800 hover:bg-neutral-700 text-emerald-400 border-neutral-700`}`,title:`Chuyển đổi giữa tìm 1 điểm hoặc lộ trình 2 điểm (Điểm đi ➔ Điểm đến)`,children:[
             (0,N.jsx)(`span`,{className:`text-xs leading-none`,children:`⇄`}),
             (0,N.jsx)(`span`,{children:isTwo?`1 Điểm`:`Lộ trình 2 điểm`})
+          ]}),
+          (0,N.jsxs)(`button`,{type:`button`,onClick:resetGPS,className:`px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border active:scale-95 ${gpsStatus===`ready`?`bg-emerald-950/60 text-emerald-400 border-emerald-500/50`:`bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700`}`,title:`Nhấn để lấy lại toạ độ GPS chính xác nhất của thiết bị`,children:[
+            (0,N.jsx)(`span`,{className:`w-2 h-2 rounded-full ${gpsStatus===`ready`?`bg-emerald-400 animate-pulse`:`bg-amber-400`}`}),
+            (0,N.jsx)(`span`,{children:gpsStatus===`ready`?`GPS: Chuẩn`:`Lấy GPS`})
           ]})
         ]}),
         !isTwo&&(0,N.jsxs)(`form`,{onSubmit:y,className:`relative flex-1 max-w-md flex items-center gap-1.5 sm:gap-2`,children:[
           (0,N.jsxs)(`div`,{className:`relative w-full`,children:[
-            (0,N.jsx)(`input`,{type:`text`,placeholder:`Tìm điểm đến, quán ăn, sân bay, toà nhà...`,value:n,onFocus:()=>{setCurField(`dest`);o.length>0&&autoSug&&d(!0)},onChange:e=>r(e.target.value),className:`w-full bg-neutral-800/90 hover:bg-neutral-800 focus:bg-neutral-950 text-xs sm:text-sm text-white placeholder-neutral-400 pl-8 pr-7 py-1.5 sm:py-2 rounded-xl border border-neutral-700 focus:border-emerald-500 focus:outline-none transition-all`}),
+            (0,N.jsx)(`input`,{type:`text`,placeholder:`Tìm điểm đến (quán ăn, toà nhà, trường học...)`,value:n,onFocus:()=>{setCurField(`dest`);o.length>0&&autoSug&&d(!0)},onChange:e=>r(e.target.value),className:`w-full bg-neutral-800/90 hover:bg-neutral-800 focus:bg-neutral-950 text-xs sm:text-sm text-white placeholder-neutral-400 pl-8 pr-7 py-1.5 sm:py-2 rounded-xl border border-neutral-700 focus:border-emerald-500 focus:outline-none transition-all`}),
             (0,N.jsx)(Ot,{className:`w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none`}),
             n&&(0,N.jsx)(`button`,{type:`button`,onClick:()=>{r(``),s([]),d(!1)},className:`absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white`,children:(0,N.jsx)(cn,{className:`w-3.5 h-3.5`})})
           ]}),
@@ -585,15 +627,15 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
         (0,N.jsxs)(`div`,{className:`flex items-center gap-1.5 shrink-0`,children:[
           (0,N.jsxs)(`div`,{className:`flex items-center bg-neutral-800 rounded-xl p-0.5 border border-neutral-700 text-xs`,children:[
             (0,N.jsx)(`button`,{onClick:()=>a(!0),className:`px-2.5 py-1 rounded-lg transition font-bold ${i?`bg-emerald-600 text-white shadow`:`text-neutral-400 hover:text-white`}`,children:`Dẫn đường`}),
-            (0,N.jsx)(`button`,{onClick:()=>a(!1),className:`px-2.5 py-1 rounded-lg transition font-bold ${i?`text-neutral-400 hover:text-white`:`bg-emerald-600 text-white shadow`}`,children:`Vị trí`})
+            (0,N.jsx)(`button`,{onClick:()=>{a(!1);resetGPS()},className:`px-2.5 py-1 rounded-lg transition font-bold ${!i?`bg-emerald-600 text-white shadow`:`text-neutral-400 hover:text-white`}`,children:`Vị trí`})
           ]})
         ]})
       ]}),
       isTwo&&(0,N.jsxs)(`form`,{onSubmit:y,className:`flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 p-2 bg-neutral-950/90 rounded-2xl border border-neutral-800 animate-fadeIn relative z-20`,children:[
         (0,N.jsxs)(`div`,{className:`relative flex-1 flex items-center bg-neutral-900/90 rounded-xl border border-neutral-700/80 focus-within:border-emerald-500 transition px-2.5 py-1`,children:[
           (0,N.jsx)(`span`,{className:`w-2 h-2 rounded-full bg-emerald-400 shrink-0 mr-1.5 animate-pulse`}),
-          (0,N.jsx)(`input`,{type:`text`,placeholder:orig===`My Location`?`📍 Vị trí GPS của tôi (hoặc gõ địa điểm)...`:`Điểm xuất phát...`,value:origIn,onFocus:()=>{setCurField(`origin`);o.length>0&&autoSug&&d(!0)},onChange:e=>setOrigIn(e.target.value),className:`flex-1 bg-transparent text-xs text-white placeholder:text-neutral-400 focus:outline-none min-w-0 pr-1`}),
-          (0,N.jsx)(`button`,{type:`button`,onClick:resetGPS,className:`text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white transition shrink-0 ml-1`,title:`Đặt lại về GPS vị trí xe hiện tại`,children:`📍 GPS`})
+          (0,N.jsx)(`input`,{type:`text`,placeholder:orig===`My Location`?(gpsCoords?`📍 Vị trí GPS chuẩn (${gpsCoords.lat.toFixed(3)}, ${gpsCoords.lng.toFixed(3)})`:`📍 Vị trí GPS của tôi (hoặc gõ...)`):`Điểm xuất phát...`,value:origIn,onFocus:()=>{setCurField(`origin`);o.length>0&&autoSug&&d(!0)},onChange:e=>setOrigIn(e.target.value),className:`flex-1 bg-transparent text-xs text-white placeholder:text-neutral-400 focus:outline-none min-w-0 pr-1`}),
+          (0,N.jsx)(`button`,{type:`button`,onClick:resetGPS,className:`text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white transition shrink-0 ml-1`,title:`Lấy lại toạ độ GPS chính xác nhất`,children:`📍 GPS`})
         ]}),
         (0,N.jsx)(`button`,{type:`button`,onClick:swapPoints,className:`w-8 h-8 self-center sm:self-auto rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white flex items-center justify-center transition active:scale-95 border border-neutral-700 shrink-0 shadow-sm`,title:`Đổi chỗ Điểm đi và Điểm đến`,children:`⇅`}),
         (0,N.jsxs)(`div`,{className:`relative flex-1 flex items-center bg-neutral-900/90 rounded-xl border border-neutral-700/80 focus-within:border-emerald-500 transition px-2.5 py-1`,children:[
@@ -636,9 +678,9 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
       (0,N.jsx)(`iframe`,{src:mapSrc,title:`Google Maps Navigation`,className:`absolute inset-0 w-full h-full border-0`,loading:`lazy`,allow:`geolocation`},`${i}-${realOrigin}-${realDest}`),
       p?.upcomingSign&&(0,N.jsx)(`div`,{className:`absolute top-3 right-3 max-w-[280px] sm:max-w-xs z-20 drop-shadow-2xl`,children:(0,N.jsx)(Vr,{upcomingSign:p.upcomingSign,secondarySign:p.secondarySign,currentRoadName:p.currentRoadName,isVoiceEnabled:h,onToggleVoice:()=>{let e=!h;g(e),fr(e),e&&jr(`Đã bật âm thanh cảnh báo`)}})}),
       (0,N.jsxs)(`div`,{className:`absolute bottom-3 left-3 pointer-events-none bg-neutral-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-neutral-700/80 shadow-xl flex items-center gap-2 text-[11px] max-w-[75%]`,children:[
-        (0,N.jsx)(`span`,{className:`w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0`}),
+        (0,N.jsx)(`span`,{className:`w-2 h-2 rounded-full ${gpsCoords?`bg-emerald-400 animate-pulse`:`bg-amber-400`}`}),
         (0,N.jsxs)(`span`,{className:`text-neutral-200 font-medium truncate`,children:[
-          realOrigin===`My Location`?`Đích đến: `:`Từ ${realOrigin} ➔ `,
+          orig===`My Location`?(gpsCoords?`Từ: 📍 Vị trí GPS chuẩn ➔ `:`Từ: 📍 Vị trí của tôi ➔ `):`Từ: ${realOrigin} ➔ `,
           realDest
         ]})
       ]}),
