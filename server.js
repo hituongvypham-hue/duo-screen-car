@@ -20,7 +20,7 @@ const MIME_TYPES = {
   '.wav': 'audio/wav',
 };
 
-const server = http.createServer((req, res) => {
+function handleRequest(req, res) {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
@@ -129,11 +129,17 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': contentType });
     res.end(content);
   });
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`\n======================================================`);
-  console.log(`🚗 DUOSCREEN CARPLAY DASHBOARD ĐANG CHẠY TẠI:`);
-  console.log(`👉 http://localhost:${PORT}`);
-  console.log(`======================================================\n`);
-});
+const server = http.createServer(handleRequest);
+
+if (!process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`\n======================================================`);
+    console.log(`🚗 DUOSCREEN CARPLAY DASHBOARD ĐANG CHẠY TẠI:`);
+    console.log(`👉 http://localhost:${PORT}`);
+    console.log(`======================================================\n`);
+  });
+}
+
+module.exports = handleRequest;

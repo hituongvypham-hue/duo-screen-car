@@ -2,6 +2,7 @@
   "name": "duo-screen-car",
   "version": "1.0.0",
   "description": "CarPlay Multi-Screen Dashboard",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
