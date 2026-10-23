@@ -1,0 +1,24 @@
+{
+  "users": [
+    {
+      "id": "user_default",
+      "name": "Tài xế Vy",
+      "avatar": "🚗",
+      "createdAt": 1700000000000,
+      "playlists": [
+        {
+          "id": "favorites",
+          "name": "Bài hát yêu thích ❤️",
+          "createdAt": 1700000000000,
+          "videos": []
+        },
+        {
+          "id": "night_drive",
+          "name": "Nhạc lái xe đêm 🌙",
+          "createdAt": 1700000000000,
+          "videos": []
+        }
+      ]
+    }
+  ]
+}
