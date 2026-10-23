@@ -486,7 +486,7 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
         if(_lastMapLat===null)return true;
         let R=6371e3,dLat=(lat-_lastMapLat)*Math.PI/180,dLng=(lng-_lastMapLng)*Math.PI/180;
         let a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(_lastMapLat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
-        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))>50;
+        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))>100;
       };
       let onPos=pos=>{
         let lat=pos.coords.latitude,
