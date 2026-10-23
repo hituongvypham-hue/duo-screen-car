@@ -2,10 +2,10 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=20261023_12" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon.png?v=20261023_12" />
-    <link rel="shortcut icon" href="/icon.png?v=20261023_12" />
-    <link rel="apple-touch-icon" href="/icon.png?v=20261023_12" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=20261023_13" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon.png?v=20261023_13" />
+    <link rel="shortcut icon" href="/icon.png?v=20261023_13" />
+    <link rel="apple-touch-icon" href="/icon.png?v=20261023_13" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -48,6 +48,18 @@
         box-sizing: border-box !important;
         overflow: hidden !important;
       }
+      /* PWA Standalone mode on iPhone - ensure content is below Dynamic Island */
+      @media all and (display-mode: standalone) {
+        #root {
+          padding-top: max(env(safe-area-inset-top, 0px), 54px) !important;
+        }
+      }
+      /* Also handle iOS navigator.standalone */
+      @supports (-webkit-touch-callout: none) {
+        #root.pwa-standalone {
+          padding-top: max(env(safe-area-inset-top, 0px), 54px) !important;
+        }
+      }
       .h-screen {
         height: 100% !important;
         height: 100dvh !important;
@@ -66,12 +78,15 @@
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
       }
+      /* GPU layer isolation for iframes */
       iframe {
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
+        will-change: transform;
       }
+      /* Map container: full GPU layer isolation + block browser touch handling */
       .map-layer-isolate {
         isolation: isolate !important;
         -webkit-transform: translate3d(0, 0, 0) !important;
@@ -79,18 +94,48 @@
         -webkit-backface-visibility: hidden !important;
         backface-visibility: hidden !important;
         contain: paint layout !important;
+        touch-action: none !important;
+        -webkit-overflow-scrolling: auto !important;
+      }
+      /* Force iframe inside map container to have its own compositing layer */
+      .map-layer-isolate iframe {
+        will-change: transform !important;
+        -webkit-transform: translate3d(0, 0, 0) !important;
+        transform: translate3d(0, 0, 0) !important;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        touch-action: auto !important;
       }
     </style>
     <script>
-      // Ngăn Safari iOS phóng to thu nhỏ toàn trang (viewport pinch-zoom) gây chớp đen / rớt GPU layer trên iPhone
+      // Ngăn Safari iOS phóng to thu nhỏ toàn trang gây chớp đen / rớt GPU layer trên iPhone
       document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
       document.addEventListener('gesturechange', function(e) { e.preventDefault(); }, { passive: false });
       document.addEventListener('gestureend', function(e) { e.preventDefault(); }, { passive: false });
+
+      // Chặn multi-touch (2+ ngón) ở cấp document để tránh browser can thiệp vào iframe
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) {
+          // Chỉ chặn nếu target KHÔNG phải iframe (để iframe xử lý nội bộ)
+          var t = e.target;
+          if (t && t.tagName !== 'IFRAME') {
+            e.preventDefault();
+          }
+        }
+      }, { passive: false });
+
+      // Detect PWA standalone mode and add class to root
+      if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+        document.addEventListener('DOMContentLoaded', function() {
+          var root = document.getElementById('root');
+          if (root) root.classList.add('pwa-standalone');
+        });
+      }
     </script>
-    <script src="/assets/hls.min.js?v=20261023_12"></script>
-    <script src="/assets/github-sync.js?v=20261023_12"></script>
-    <script type="module" crossorigin src="/assets/index-B9oCIx6t.js?v=20261023_12"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-cs40xI45.css?v=20261023_12">
+    <script src="/assets/hls.min.js?v=20261023_13"></script>
+    <script src="/assets/github-sync.js?v=20261023_13"></script>
+    <script type="module" crossorigin src="/assets/index-B9oCIx6t.js?v=20261023_13"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-cs40xI45.css?v=20261023_13">
   </head>
   <body class="bg-black select-none">
     <div id="root"></div>
