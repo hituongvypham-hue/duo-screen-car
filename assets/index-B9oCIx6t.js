@@ -471,6 +471,7 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
      [c,l]=(0,_.useState)(!1),
      [u,d]=(0,_.useState)(!1),
      [gpsCoords,setGpsCoords]=(0,_.useState)(null),
+     [mapGpsCoords,setMapGpsCoords]=(0,_.useState)(null),
      [gpsStatus,setGpsStatus]=(0,_.useState)(`pending`),
      [autoSug,setAutoSug]=(0,_.useState)(!0),
      f=(0,_.useRef)(null),
@@ -480,11 +481,22 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
   (0,_.useEffect)(()=>{
     let watchId=null;
     if(navigator.geolocation){
+      let _lastMapLat=null,_lastMapLng=null;
+      let _hasMoved=(lat,lng)=>{
+        if(_lastMapLat===null)return true;
+        let R=6371e3,dLat=(lat-_lastMapLat)*Math.PI/180,dLng=(lng-_lastMapLng)*Math.PI/180;
+        let a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(_lastMapLat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))>50;
+      };
       let onPos=pos=>{
         let lat=pos.coords.latitude,
             lng=pos.coords.longitude;
         setGpsCoords({lat,lng});
         setGpsStatus(`ready`);
+        if(_hasMoved(lat,lng)){
+          _lastMapLat=lat;_lastMapLng=lng;
+          setMapGpsCoords({lat,lng});
+        }
         let heading=pos.coords.heading!==null&&!isNaN(pos.coords.heading)?Math.round(pos.coords.heading):null;
         let sign=br(lat,lng,heading);
         m(sign);
@@ -575,6 +587,7 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
       navigator.geolocation.getCurrentPosition(pos=>{
         let lat=pos.coords.latitude,lng=pos.coords.longitude;
         setGpsCoords({lat,lng});
+        setMapGpsCoords({lat,lng});
         setGpsStatus(`ready`);
       },err=>{
         if(err.code===1){
@@ -587,14 +600,14 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
 
   let realOrigin=(orig&&orig.trim()&&orig!==`My Location`)
     ?orig.trim()
-    :(gpsCoords?`${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}`:`My Location`);
+    :(mapGpsCoords?`${mapGpsCoords.lat.toFixed(6)},${mapGpsCoords.lng.toFixed(6)}`:`My Location`);
 
   let realDest=e&&e.trim()?e.trim():`Hà Nội, Việt Nam`;
 
   let mapSrc=i
     ?`https://www.google.com/maps?saddr=${encodeURIComponent(realOrigin)}&daddr=${encodeURIComponent(realDest)}&output=embed`
-    :(gpsCoords&&!n.trim()
-      ?`https://maps.google.com/maps?q=${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}&t=&z=16&ie=UTF8&iwloc=&output=embed`
+    :(mapGpsCoords&&!n.trim()
+      ?`https://maps.google.com/maps?q=${mapGpsCoords.lat.toFixed(6)},${mapGpsCoords.lng.toFixed(6)}&t=&z=16&ie=UTF8&iwloc=&output=embed`
       :`https://maps.google.com/maps?q=${encodeURIComponent(realDest)}&t=&z=14&ie=UTF8&iwloc=&output=embed`);
 
   let appUrl=i
