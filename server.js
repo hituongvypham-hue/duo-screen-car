@@ -104,6 +104,80 @@ function handleRequest(req, res) {
     return;
   }
 
+  // API 3: /api/sync-users (Cloud Sync for User Profiles & Playlists)
+  if (pathname === '/api/sync-users') {
+    const CLOUD_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a167ef41fd68aa';
+
+    if (req.method === 'GET') {
+      https.get(CLOUD_URL, (cloudRes) => {
+        let body = '';
+        cloudRes.on('data', chunk => body += chunk);
+        cloudRes.on('end', () => {
+          try {
+            const parsed = JSON.parse(body);
+            res.writeHead(200, {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Access-Control-Allow-Origin': '*',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            });
+            res.end(JSON.stringify(parsed.data || { users: [] }));
+          } catch(e) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ users: [] }));
+          }
+        });
+      }).on('error', (err) => {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      });
+      return;
+    }
+
+    if (req.method === 'POST' || req.method === 'PUT') {
+      let reqBody = '';
+      req.on('data', chunk => reqBody += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(reqBody);
+          const putPayload = JSON.stringify({
+            name: 'duoscreen_carplay_users',
+            data: payload
+          });
+
+          const putReq = https.request(CLOUD_URL, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(putPayload)
+            }
+          }, (putRes) => {
+            let putResBody = '';
+            putRes.on('data', chunk => putResBody += chunk);
+            putRes.on('end', () => {
+              res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+              });
+              res.end(JSON.stringify({ success: true }));
+            });
+          });
+
+          putReq.on('error', (err) => {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+          });
+
+          putReq.write(putPayload);
+          putReq.end();
+        } catch(e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid JSON' }));
+        }
+      });
+      return;
+    }
+  }
+
   // Static files: check root, then public, then fallback to index.html
   let relPath = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
   let filePath = path.join(__dirname, relPath);
