@@ -1,0 +1,15 @@
+[
+  {
+    "id": "favorites",
+    "name": "Bài hát yêu thích ❤️",
+    "createdAt": 1700000000000,
+    "videos": [],
+    "updatedAt": 1792721706691
+  },
+  {
+    "id": "night_drive",
+    "name": "Nhạc lái xe đêm 🌙",
+    "createdAt": 1700000000000,
+    "videos": []
+  }
+]
