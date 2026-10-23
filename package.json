@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "CarPlay Multi-Screen Dashboard",
   "scripts": {
-    "build": "node build.js",
     "start": "node server.js",
     "dev": "node server.js"
   },
