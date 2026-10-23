@@ -126,7 +126,16 @@ function handleRequest(req, res) {
       res.end('File Not Found');
       return;
     }
-    res.writeHead(200, { 'Content-Type': contentType });
+    const headers = {
+      'Content-Type': contentType,
+      'Access-Control-Allow-Origin': '*'
+    };
+    if (ext === '.html' || ext === '.js') {
+      headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      headers['Pragma'] = 'no-cache';
+      headers['Expires'] = '0';
+    }
+    res.writeHead(200, headers);
     res.end(content);
   });
 }

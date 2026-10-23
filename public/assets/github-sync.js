@@ -146,7 +146,7 @@
     saveUsersToGithub();
   }
 
-  // 5. Render User Selection Modal
+  // 5. Render User Selection Modal with 100% Inline CSS
   function showUserModal(users, isSwitching) {
     const existingModal = document.getElementById('duoscreen-user-modal');
     if (existingModal) existingModal.remove();
@@ -155,93 +155,114 @@
 
     const overlay = document.createElement('div');
     overlay.id = 'duoscreen-user-modal';
-    overlay.className = 'fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-xl animate-fadeIn select-none';
+    overlay.style.cssText = `
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 2147483647 !important;
+      background: rgba(0, 0, 0, 0.85) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+      box-sizing: border-box !important;
+      user-select: none !important;
+      margin: 0 !important;
+    `;
 
     overlay.innerHTML = `
-      <div class="relative w-full max-w-lg bg-gradient-to-b from-[#131722] via-[#0d1019] to-[#07090e] border border-cyan-500/40 rounded-3xl p-5 sm:p-7 shadow-[0_0_50px_rgba(6,182,212,0.15)] text-white max-h-[92vh] overflow-y-auto">
-        ${isSwitching ? `
-          <button id="modal-close-btn" class="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white rounded-full bg-neutral-800/80 transition" title="Đóng">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </button>
-        ` : ''}
+      <div style="position: relative; width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; background: linear-gradient(180deg, #131722 0%, #0d1019 60%, #07090e 100%); border: 2px solid rgba(6,182,212,0.6); border-radius: 28px; padding: 26px; box-shadow: 0 0 60px rgba(6,182,212,0.3); color: #fff; box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <!-- Close button -->
+        <button id="modal-close-btn" style="position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: background 0.2s;" title="Đóng">
+          ✕
+        </button>
 
-        <div class="text-center mb-6">
-          <div class="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-600 shadow-lg shadow-cyan-500/30 mb-3 text-3xl">🚗</div>
-          <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
-            <span>${isSwitching ? 'Chuyển Đổi Hồ Sơ Người Dùng' : 'Chọn Hồ Sơ Người Dùng'}</span>
+        <div style="text-align: center; margin-bottom: 22px;">
+          <div style="display: inline-flex; padding: 12px; border-radius: 18px; background: linear-gradient(135deg, #0891b2, #2563eb); box-shadow: 0 6px 20px rgba(6,182,212,0.4); margin-bottom: 12px; font-size: 32px;">🚗</div>
+          <h2 style="font-size: 22px; font-weight: 900; margin: 0 0 6px 0; color: #fff; letter-spacing: -0.5px;">
+            ${isSwitching ? 'Chuyển Đổi Hồ Sơ Người Dùng' : 'Chọn Hồ Sơ Tài Xế'}
           </h2>
-          <p class="text-xs sm:text-sm text-neutral-400 mt-1">
-            ${isSwitching ? 'Chọn hồ sơ đã lưu hoặc tạo thêm tài xế mới' : 'Chào mừng bạn! Chọn hồ sơ đã lưu hoặc tạo mới để đồng bộ playlist.'}
+          <p style="font-size: 13px; color: #94a3b8; margin: 0;">
+            ${isSwitching ? 'Chọn hồ sơ đã lưu hoặc tạo thêm tài xế mới' : 'Chào mừng bạn! Chọn hồ sơ đã lưu để đồng bộ bài hát cá nhân.'}
           </p>
         </div>
 
         <!-- Danh sách user có sẵn -->
-        <div class="space-y-2.5 mb-6">
-          <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span>Hồ sơ đã lưu trên GitHub (${users.length})</span>
-            <span class="text-cyan-400 text-[10px]">☁️ Tự động đồng bộ</span>
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <span>HỒ SƠ ĐÃ LƯU TRÊN GITHUB (${users.length})</span>
+            <span style="color: #22d3ee; font-size: 11px; font-weight: 600;">☁️ Đồng bộ tự động</span>
           </div>
 
-          <div id="users-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+          <div id="users-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
             ${users.map(u => {
               const countPlaylists = (u.playlists || []).length;
               let totalVideos = 0;
               (u.playlists || []).forEach(p => totalVideos += (p.videos || []).length);
               return `
-                <button type="button" data-user-id="${u.id}" class="user-select-card w-full flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-neutral-900/90 hover:bg-neutral-800/90 border border-neutral-800 hover:border-cyan-500/50 transition active:scale-[0.98] group text-left">
-                  <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                <div data-user-id="${u.id}" class="user-select-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 18px; background: rgba(23, 29, 43, 0.9); border: 1.5px solid rgba(255,255,255,0.08); cursor: pointer; transition: all 0.2s;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 14px; background: #0f172a; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 24px;">
                       ${u.avatar || '🚗'}
                     </div>
                     <div>
-                      <div class="font-bold text-sm sm:text-base text-white group-hover:text-cyan-300 transition-colors">${u.name}</div>
-                      <div class="text-[11px] text-neutral-400">${countPlaylists} danh sách • ${totalVideos} bài hát</div>
+                      <div style="font-weight: 700; font-size: 15px; color: #fff;">${u.name}</div>
+                      <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${countPlaylists} danh sách • ${totalVideos} bài hát</div>
                     </div>
                   </div>
-                  <div class="px-3 py-1.5 rounded-xl bg-cyan-600/20 group-hover:bg-cyan-600 border border-cyan-500/40 text-cyan-400 group-hover:text-white font-bold text-xs transition">
+                  <button type="button" style="padding: 6px 14px; border-radius: 12px; background: #0891b2; color: #fff; font-weight: 700; font-size: 12px; border: none; cursor: pointer; pointer-events: none;">
                     Chọn
-                  </div>
-                </button>
+                  </button>
+                </div>
               `;
             }).join('')}
           </div>
         </div>
 
         <!-- Nút mở form tạo user mới -->
-        <div class="border-t border-neutral-800/80 pt-5">
-          <div id="create-user-section" class="hidden">
-            <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-              <span class="text-cyan-400">+</span> Tạo hồ sơ người dùng mới
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px;">
+          <div id="create-user-section" style="display: none;">
+            <h3 style="font-size: 14px; font-weight: 800; color: #fff; margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+              <span style="color: #22d3ee;">+</span> Tạo hồ sơ người dùng mới
             </h3>
-            <div class="mb-3">
-              <label class="block text-[11px] font-semibold text-neutral-400 mb-1">Tên của bạn / Tên xe</label>
-              <input id="new-user-name" type="text" placeholder="Ví dụ: Vy, Gia đình, Anh Tuấn..." class="w-full bg-neutral-950 border border-neutral-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none transition" />
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Tên của bạn / Tên xe</label>
+              <input id="new-user-name" type="text" placeholder="Ví dụ: Vy, Gia đình, Anh Tuấn..." style="width: 100%; background: #030712; border: 1px solid #374151; border-radius: 12px; padding: 10px 14px; font-size: 14px; color: #fff; box-sizing: border-box; outline: none;" />
             </div>
 
-            <div class="mb-4">
-              <label class="block text-[11px] font-semibold text-neutral-400 mb-1.5">Chọn biểu tượng đại diện</label>
-              <div class="flex flex-wrap gap-2" id="avatar-picker">
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Chọn biểu tượng đại diện</label>
+              <div id="avatar-picker" style="display: flex; flex-wrap: wrap; gap: 8px;">
                 ${AVATAR_OPTIONS.map((a, i) => `
-                  <button type="button" data-avatar="${a}" class="avatar-option w-9 h-9 rounded-xl border flex items-center justify-center text-lg transition ${i === 0 ? 'bg-cyan-600/30 border-cyan-400 scale-105' : 'bg-neutral-900 border-neutral-700 hover:border-neutral-500'}">
+                  <button type="button" data-avatar="${a}" class="avatar-option" style="width: 38px; height: 38px; border-radius: 12px; border: 1.5px solid ${i === 0 ? '#06b6d4' : '#334155'}; background: ${i === 0 ? 'rgba(6,182,212,0.25)' : '#0f172a'}; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: all 0.15s;">
                     ${a}
                   </button>
                 `).join('')}
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <button id="btn-submit-new-user" type="button" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-600/30 transition active:scale-95">
+            <div style="display: flex; gap: 10px;">
+              <button id="btn-submit-new-user" type="button" style="flex: 1; padding: 11px; border-radius: 14px; background: linear-gradient(135deg, #0891b2, #2563eb); color: #fff; font-weight: 800; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(6,182,212,0.3);">
                 Tạo & Bắt đầu
               </button>
-              <button id="btn-cancel-new-user" type="button" class="px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white text-sm transition">
+              <button id="btn-cancel-new-user" type="button" style="padding: 11px 18px; border-radius: 14px; background: #1e293b; color: #94a3b8; font-weight: 600; font-size: 14px; border: none; cursor: pointer;">
                 Hủy
               </button>
             </div>
           </div>
 
-          <button id="btn-show-create" type="button" class="w-full py-3 rounded-2xl border border-dashed border-neutral-700 hover:border-cyan-500/60 bg-neutral-900/40 hover:bg-neutral-900/80 text-cyan-400 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95">
-            <span>+</span>
-            <span>Tạo một hồ sơ người dùng mới</span>
+          <button id="btn-show-create" type="button" style="width: 100%; padding: 12px; border-radius: 16px; border: 1.5px dashed #0891b2; background: rgba(8,145,178,0.1); color: #22d3ee; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s;">
+            <span>+ Tạo một hồ sơ người dùng mới</span>
+          </button>
+
+          <button id="btn-skip-modal" type="button" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer;">
+            Bỏ qua & Tiếp tục lái xe ➜
           </button>
         </div>
       </div>
@@ -249,11 +270,24 @@
 
     document.body.appendChild(overlay);
 
-    // Event listeners
-    if (isSwitching) {
-      const closeBtn = document.getElementById('modal-close-btn');
-      if (closeBtn) closeBtn.onclick = () => overlay.remove();
-    }
+    const closeModal = () => {
+      overlay.remove();
+      const currentActive = localStorage.getItem('douscreen_active_user_id');
+      if (!currentActive && users && users.length > 0) {
+        switchActiveUser(users[0]);
+      }
+    };
+
+    // Close handlers
+    const closeBtn = document.getElementById('modal-close-btn');
+    if (closeBtn) closeBtn.onclick = closeModal;
+
+    const skipBtn = document.getElementById('btn-skip-modal');
+    if (skipBtn) skipBtn.onclick = closeModal;
+
+    overlay.onclick = (e) => {
+      if (e.target === overlay) closeModal();
+    };
 
     // Select existing user
     overlay.querySelectorAll('.user-select-card').forEach(btn => {
@@ -261,6 +295,14 @@
         const uid = btn.getAttribute('data-user-id');
         const user = (allUsersData.users || []).find(u => u.id === uid);
         if (user) switchActiveUser(user);
+      };
+      btn.onmouseenter = () => {
+        btn.style.borderColor = 'rgba(6,182,212,0.8)';
+        btn.style.background = 'rgba(30, 41, 59, 0.95)';
+      };
+      btn.onmouseleave = () => {
+        btn.style.borderColor = 'rgba(255,255,255,0.08)';
+        btn.style.background = 'rgba(23, 29, 43, 0.9)';
       };
     });
 
@@ -270,24 +312,30 @@
     const cancelNewUserBtn = document.getElementById('btn-cancel-new-user');
 
     showCreateBtn.onclick = () => {
-      showCreateBtn.classList.add('hidden');
-      createSection.classList.remove('hidden');
+      showCreateBtn.style.display = 'none';
+      if (skipBtn) skipBtn.style.display = 'none';
+      createSection.style.display = 'block';
       const nameInput = document.getElementById('new-user-name');
       if (nameInput) nameInput.focus();
     };
 
     cancelNewUserBtn.onclick = () => {
-      createSection.classList.add('hidden');
-      showCreateBtn.classList.remove('hidden');
+      createSection.style.display = 'none';
+      showCreateBtn.style.display = 'flex';
+      if (skipBtn) skipBtn.style.display = 'block';
     };
 
     // Avatar pick
     overlay.querySelectorAll('.avatar-option').forEach(btn => {
       btn.onclick = () => {
         overlay.querySelectorAll('.avatar-option').forEach(b => {
-          b.className = 'avatar-option w-9 h-9 rounded-xl border flex items-center justify-center text-lg transition bg-neutral-900 border-neutral-700 hover:border-neutral-500';
+          b.style.borderColor = '#334155';
+          b.style.background = '#0f172a';
+          b.style.transform = 'scale(1)';
         });
-        btn.className = 'avatar-option w-9 h-9 rounded-xl border flex items-center justify-center text-lg transition bg-cyan-600/30 border-cyan-400 scale-105';
+        btn.style.borderColor = '#06b6d4';
+        btn.style.background = 'rgba(6,182,212,0.25)';
+        btn.style.transform = 'scale(1.08)';
         selectedAvatar = btn.getAttribute('data-avatar');
       };
     });
@@ -345,11 +393,32 @@
 
     const switchBtn = document.createElement('button');
     switchBtn.id = 'btn-switch-profile';
-    switchBtn.className = 'fixed bottom-4 right-4 z-40 px-3.5 py-2 rounded-2xl bg-neutral-900/90 hover:bg-neutral-800 text-cyan-400 hover:text-white border border-cyan-500/40 hover:border-cyan-400 shadow-xl backdrop-blur-md text-xs font-bold flex items-center gap-1.5 transition active:scale-95';
+    switchBtn.style.cssText = `
+      position: fixed !important;
+      bottom: 16px !important;
+      right: 16px !important;
+      z-index: 99999 !important;
+      padding: 8px 14px !important;
+      border-radius: 16px !important;
+      background: rgba(15, 23, 42, 0.95) !important;
+      color: #22d3ee !important;
+      border: 1.5px solid rgba(6, 182, 212, 0.5) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
+      user-select: none !important;
+    `;
     switchBtn.title = 'Đổi tài xế / Chọn hồ sơ người dùng';
     switchBtn.innerHTML = `
       <span>🔄</span>
-      <span class="hidden sm:inline">Đổi hồ sơ</span>
+      <span>Đổi hồ sơ</span>
     `;
 
     switchBtn.onclick = () => {
@@ -370,7 +439,17 @@
       allUsersData.users = users;
 
       if (!activeUserId) {
-        // LẦN ĐẦU MỞ TRÌNH DUYỆT MỚI: Hiển thị ngay modal chọn User!
+        // LẦN ĐẦU MỞ TRÌNH DUYỆT MỚI: Tự động dùng user đầu tiên và gợi ý chọn nếu muốn
+        isInternalUpdate = true;
+        localStorage.setItem('douscreen_playlists', JSON.stringify(users[0].playlists || []));
+        localStorage.setItem('douscreen_driver_profile', JSON.stringify({
+          name: users[0].name,
+          avatar: users[0].avatar || '🚗'
+        }));
+        isInternalUpdate = false;
+        window.dispatchEvent(new Event('storage'));
+
+        // Hiển thị modal toàn màn hình chuẩn xác
         showUserModal(users, false);
       } else {
         // Đã có user trên trình duyệt này: Tải playlist mới nhất của user đó
