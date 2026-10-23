@@ -508,7 +508,7 @@ let rr=()=>{let[e,t]=(0,_.useState)(``),[n,r]=(0,_.useState)([]),[i,a]=(0,_.useS
         else setGpsStatus(`error`);
       };
       navigator.geolocation.getCurrentPosition(onPos,onErr,{enableHighAccuracy:!0,timeout:8000,maximumAge:0});
-      watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:!0,maximumAge:2e3});
+      watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:!0,maximumAge:0});
     }else{
       setGpsStatus(`unsupported`);
     }
